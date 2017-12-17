@@ -15,8 +15,8 @@ def normalizeRows(x):
     unit length.
     """
 
-    ### YOUR CODE HERE
-    denom = np.apply_along_axis(lambda x: np.sqrt(x.T.dot(x)), 1, x)
+    ##    # YOUR CODE HERE
+    denom = np.apply_along_axis(lambda x: np.sqrt(x.T.dot(x)), 1, x)  # 这里对输入进行归一化处理使得优化梯度下降速度
     x /= denom[:, None]
     ### END YOUR CODE
 
@@ -25,7 +25,7 @@ def normalizeRows(x):
 
 def test_normalize_rows():
     print ("Testing normalizeRows...")
-    x = normalizeRows(np.array([[3.0, 4.0], [1, 2]]))
+    x = normalizeRows(np.array([[1000.0, 4.0], [1, 2]]))
     print (x)
     ans = np.array([[0.6, 0.8], [0.4472136, 0.89442719]])
     assert np.allclose(x, ans, rtol=1e-05, atol=1e-06)
@@ -86,7 +86,7 @@ def getNegativeSamples(target, dataset, K):
 
     indices = [None] * K
     for k in range(K):
-        newidx = dataset.sampleTokenIdx()
+        newidx = dataset.sampleTokenIdx()    #这里仅仅是随机选了7个
         while newidx == target:
             newidx = dataset.sampleTokenIdx()
         indices[k] = newidx

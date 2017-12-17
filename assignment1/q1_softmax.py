@@ -31,9 +31,9 @@ def softmax(x):
     if len(x.shape) > 1:
         # Matrix
         ### YOUR CODE HERE
-        exp_minmax = lambda x: np.exp(x - np.max(x))
+        exp_minmax = lambda x: np.exp(x - np.max(x))   #这里是对每一行的x求max 然后被一行的x 减去对于的max 为什么
         denom = lambda x: 1.0 / np.sum(x)
-        x = np.apply_along_axis(exp_minmax, 1, x)
+        x = np.apply_along_axis(exp_minmax, 1, x)    #注意这里是对每一行算
         denominator = np.apply_along_axis(denom, 1, x)
 
         if len(denominator.shape) == 1:
@@ -48,7 +48,7 @@ def softmax(x):
         x = x - x_max
         numerator = np.exp(x)
         denominator = 1.0 / np.sum(numerator)
-        x = numerator.dot(denominator)
+        x = numerator.dot(denominator) #该步骤就是 对于一个numerator（i） 运行 numerator（i）/ denominator  denominator为numerator的和
         ### END YOUR CODE
 
     assert x.shape == orig_shape
