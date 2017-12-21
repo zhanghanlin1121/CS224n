@@ -64,20 +64,20 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
 
     #  Calculate the predictions:
     vhat = predicted
-    z = np.dot(outputVectors, vhat)
+    z = np.dot(outputVectors, vhat)  #这个predict是Vc的向量，z 就是[U0VC,U1VC,...UwVc ]
     preds = softmax(z)
 
     #  Calculate the cost:
-    cost = -np.log(preds[target])
+    cost = -np.log(preds[target])   #交叉熵值  target 是的当前需要预测的context word 下标
 
     #  Gradients
     z = preds.copy()
     z[target] -= 1.0
 
-    grad = np.outer(z, vhat)
-    gradPred = np.dot(outputVectors.T, z)
+    grad = np.outer(z, vhat) # U的梯度 context word
+    gradPred = np.dot(outputVectors.T, z)  # vc的梯度
     ### END YOUR CODE
-
+    #gradPred 是一个 19539,10的稠密矩阵，每一项都有梯度
     return cost, gradPred, grad
 
 
@@ -118,16 +118,16 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     cost = 0
     z = sigmoid(np.dot(outputVectors[target], predicted))
 
-    cost -= np.log(z)
-    grad[target] += predicted * (z - 1.0)
+    cost -= np.log(z)       #初始化cost
+    grad[target] += predicted * (z - 1.0) #  这里 我们需要求得[traget, 1,2...k] 的context的偏导数
     gradPred += outputVectors[target] * (z - 1.0)
 
     for k in range(K):
         samp = indices[k + 1]
         z = sigmoid(np.dot(outputVectors[samp], predicted))
         cost -= np.log(1.0 - z)
-        grad[samp] += predicted * z
-        gradPred += outputVectors[samp] * z
+        grad[samp] += predicted * z   #  grad[samp] = grad[samp] + vc * sigmoid(np.dot(outputVectors[samp], predicted))  通过化简可以得到该公式
+        gradPred += outputVectors[samp] * z   #  gradPred = gradPred + outputVectors[samp] * sigmoid(np.dot(outputVectors[samp], predicted))  通过化简可以得到该公式
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -163,6 +163,7 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
 
     ### YOUR CODE HERE
     cword_idx = tokens[currentWord]
+    #cword_idx 表示这个currentWord是文本中的第几个单词 正好可以用来对应向量且不同向量一一对应
     vhat = inputVectors[cword_idx]
 
     for j in contextWords:
@@ -172,6 +173,7 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
         cost += c_cost
         gradIn[cword_idx] += c_grad_in
         gradOut += c_grad_out
+        #这里感觉更符合 nagetive sampling 的处理方式 因为outputwords 梯度如果是 softmax 交叉熵的话 全量返回每次都会累加
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -215,12 +217,14 @@ def word2vec_sgd_wrapper(word2vecModel, tokens, wordVectors, dataset, C,
                          word2vecCostAndGradient=softmaxCostAndGradient):
     batchsize = 50
     cost = 0.0
-    grad = np.zeros(wordVectors.shape)
-    N = wordVectors.shape[0]
+    grad = np.zeros(wordVectors.shape)   #wordVectors 为 theta 到优化参数
+    N = wordVectors.shape[0]   #N 为有多少待优化的词向量
     inputVectors = wordVectors[:N // 2, :]
     outputVectors = wordVectors[N // 2:, :]
+    # 这里分别又定义了inputVectors，outputVectors 这里本来定义的就是一半的一半
     for i in range(batchsize):
         C1 = random.randint(1, C)
+        #这个window大小是随机的？？  这里是随机的，我们应该也可以顺序取得吧
         centerword, context = dataset.getRandomContext(C1)
 
         if word2vecModel == skipgram:
@@ -234,7 +238,7 @@ def word2vec_sgd_wrapper(word2vecModel, tokens, wordVectors, dataset, C,
         cost += c / batchsize / denom
         grad[:N // 2, :] += gin / batchsize / denom
         grad[N // 2:, :] += gout / batchsize / denom
-
+        #求的mini batch的平均梯度
     return cost, grad
 
 

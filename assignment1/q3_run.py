@@ -11,10 +11,15 @@ import os
 from q3_word2vec import *
 from q3_sgd import *
 
+def cosSim(a,b):
+    num = np.dot(a.T, b)
+    denom = np.linalg.norm(a) * np.linalg.norm(b)
+    cos = num / denom #余弦值
+    return 0.5 + 0.5 * cos #归一化
 # Reset the random seed to make sure that everyone gets the same results
 random.seed(314)
 dataset = StanfordSentiment()
-tokens = dataset.tokens()
+tokens = dataset.tokens() #token 等于所有出现单词的集合  token 的 key 为 单词 value 表示这个是文本中的第几个新单词
 nWords = len(tokens)
 
 # We are going to train 10-dimensional vectors for this assignment
@@ -32,9 +37,10 @@ wordVectors = np.concatenate(
     ((np.random.rand(nWords, dimVectors) - 0.5) /
        dimVectors, np.zeros((nWords, dimVectors))),
     axis=0)
+# 这里wordVectors 相对于 theta
 wordVectors = sgd(
     lambda vec: word2vec_sgd_wrapper(skipgram, tokens, vec, dataset, C,
-        negSamplingCostAndGradient),
+        softmaxCostAndGradient),
     wordVectors, 0.3, 40000, None, True, PRINT_EVERY=10)
 # Note that normalization is not called here. This is not a bug,
 # normalizing during training loses the notion of length.
@@ -61,6 +67,23 @@ for (key,value) in tokens.items():
         tokens1[key] = value
 visualizeIdx = [tokens1[word] for word in visualizeWords]
 visualizeVecs = wordVectors[visualizeIdx, :]
+# 第10个词语
+index = 0
+target = "brilliant"
+for word in visualizeWords:
+    if word == target:
+        break
+    index += 1
+targetVector = visualizeVecs[index]
+scoreDict = {}
+index = 0
+for vector in visualizeVecs:
+    scoreDict[cosSim(targetVector,vector)] = index
+    index += 1
+sortedScoreList = sorted(scoreDict.keys(),reverse=True)
+for rate in sortedScoreList:
+    print(visualizeWords[scoreDict[rate]])
+
 temp = (visualizeVecs - np.mean(visualizeVecs, axis=0))
 covariance = 1.0 / len(visualizeIdx) * temp.T.dot(temp)
 U,S,V = np.linalg.svd(covariance)
@@ -74,3 +97,5 @@ plt.xlim((np.min(coord[:,0]), np.max(coord[:,0])))
 plt.ylim((np.min(coord[:,1]), np.max(coord[:,1])))
 
 plt.savefig('q3_word_vectors.png')
+
+

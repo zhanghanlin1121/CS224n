@@ -86,8 +86,8 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         cost = None
         ### YOUR CODE HERE
         cost, grad = f(x)
-        x -= step * grad
-        postprocessing(x)
+        x -= step * grad   #对所有的theta进行梯度下降  grad 的各个维度与 x 保持对应的关系
+        postprocessing(x)  #做一些后处理  比如归一化向量之类的
         ### END YOUR CODE
 
         if iter % PRINT_EVERY == 0:

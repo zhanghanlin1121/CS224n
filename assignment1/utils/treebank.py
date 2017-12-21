@@ -10,7 +10,7 @@ import random
 class StanfordSentiment:
     def __init__(self, path=None, tablesize = 1000000):
         if not path:
-            path = "F:\\AI\\NLP\\dataset\\stanfordSentimentTreebank\\stanfordSentimentTreebank"
+            path = "D:\\AI\\NLP\\stanfordSentimentTreebankRaw\\stanfordSentimentTreebank\\stanfordSentimentTreebank"
 
         self.path = path
         self.tablesize = tablesize
@@ -103,9 +103,11 @@ class StanfordSentiment:
         if wordID+1 < len(sent):
             context += sent[wordID+1:min(len(sent), wordID + C + 1)]
 
+        #这里context有2C个 就是wordID 这个center word的周围的上下文 单词 半径为C个
+
         centerword = sent[wordID]
         context = [w for w in context if w != centerword]
-
+        #去除context 中的center words
         if len(context) > 0:
             return centerword, context
         else:
